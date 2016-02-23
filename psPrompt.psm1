@@ -55,8 +55,9 @@ function prompt {
     #Battery
     If (($batt.EstimatedChargeRemaining -ne 100)) {
         #Battery Length
-        $tLength += " [bat ##% ?? h 00m]".Length
+        $tLength += " [bat ##% ?? h m]".Length
         $tLength += $batt[0].RunTimeSpan.Hours.ToString().Length
+        $tLength += $batt[0].RunTimeSpan.Minutes.ToString().Length
         #Write the blanks to right justify
         Write-Host (' ' * (($Host.UI.RawUI.WindowSize.Width) - $tLength)) -NoNewLine
         Write-Host "[bat " -Fore "White" -NoNewLine
