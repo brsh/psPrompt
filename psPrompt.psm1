@@ -15,10 +15,20 @@ Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | Foreach {
 }
  
 function prompt {
+    if ($?) {
+        #Sets the line color to Calm, No Error
+        $ColorERR = "Yellow"
+    } else {
+        #Sets the line color to Panic, Error!
+        $ColorERR = "Red"
+    }
     # Make sure Windows and .Net know where we are (they can only handle the FileSystem)
     [Environment]::CurrentDirectory = (Get-Location -PSProvider FileSystem).ProviderPath
     # Also, put the path in the title ... (don't restrict this to the FileSystem
+
     $Host.UI.RawUI.WindowTitle = "{0} - {1} ({2})" -f $global:WindowTitlePrefix,$pwd.Path,$pwd.Provider.Name
+    $ColorFG = $Host.UI.RawUI.ForegroundColor
+    $ColorBG = $Host.UI.RawUI.BackgroundColor
 
     $line = $('─' * (($Host.UI.RawUI.WindowSize.Width)-1))
 
@@ -31,7 +41,7 @@ function prompt {
 
 
     Write-Host " "
-    write-host $line
+    write-host $line -ForegroundColor $ColorERR
 
     #Optional Info
     #[PS $($host.version.Major.ToString() + "." + $host.version.minor.ToString())]
@@ -134,8 +144,8 @@ function prompt {
     if($IsAdmin) { Write-Host " as ADMIN" -Fore "Red" -NoNewLine }
     Write-Host "]" -Fore "White" 
 
-    Write-Host $line
-    Write-Host ">" -NoNewLine -Fore "Yellow"
+    Write-Host $line -ForegroundColor $ColorERR
+    Write-Host ">" -NoNewLine -Fore $ColorFG -BackgroundColor $ColorBG
     
     return " "
  }
