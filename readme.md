@@ -17,7 +17,7 @@ To install:
 I've included an install script. Just run the following command from an administrator-level POSH console:
 
 ```
-iex (New-Object Net.WebClient).DownloadString("https://github.com/brsh/psPrompt/raw/master/Install.ps1")
+iex (New-Object Net.WebClient).DownloadString("https://raw.githubusercontent.com/brsh/psPrompt/master/install.ps1")
 ```
 
 To use it, either include it in your profile, or just run the following:
