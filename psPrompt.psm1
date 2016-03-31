@@ -34,11 +34,13 @@ function prompt {
 
     $uppity = (hid-uptime)
 
-    $batt = (hid-battery)
-    $battstat = $batt[0].BatteryStatusChar
+    try {
+        $batt = (hid-battery)
+        $battstat = $batt[0].BatteryStatusChar
+    }
+    catch { }
 
     $tz = hid-timezone
-
 
     Write-Host " "
     write-host $line -ForegroundColor $ColorERR
@@ -63,7 +65,7 @@ function prompt {
     Write-Host "s]" -Fore "White" -NoNewLine
 
     #Battery
-    If (($batt.EstimatedChargeRemaining -ne 100)) {
+    If (($batt -ne $null) -and ($batt.EstimatedChargeRemaining -ne 100)) {
         #Battery Length
         $tLength += " [bat ##% ?? h m]".Length
         $tLength += $batt[0].RunTimeSpan.Hours.ToString().Length
