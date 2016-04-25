@@ -214,11 +214,29 @@ Function hid-TimeZone {
     $SDate = TZ-Change $TimeZone.StandardDay $TimeZone.StandardDayOfWeek $TimeZone.StandardMonth $TimeZone.StandardHour
     
     $Today = Get-Date
-    if (($Today -gt $DDate) -and ($Today -lt $DDate)) {
+    if (($Today -gt $DDate) -and ($Today -lt $SDate)) {
         $retval=$TimeZone.DayLightName
     }
     else {
         $retval=$TimeZone.StandardName
     }
     [regex]::replace($retval, '[^A-Z]', "")
+}
+
+function hid-TestWrite {
+        [CmdletBinding()]
+    param (
+        [String] $Path
+    )
+    $guid = [System.Guid]::NewGuid()
+    try {
+        $testPath = Join-Path -path $Path -ChildPath $guid
+        #[IO.File]::Create($testPath, 1, 'DeleteOnClose') > $null
+        Set-Content $testpath -Value $null -ErrorAction Stop
+        return $true
+    } catch {
+        return $false
+    } finally {
+        Remove-Item $testPath -ErrorAction SilentlyContinue -Force
+    }
 }
