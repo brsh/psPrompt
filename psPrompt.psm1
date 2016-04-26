@@ -17,6 +17,7 @@ Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | Foreach {
 function Set-PromptDefaults {
     $global:psPromptSettings = New-Object PSObject -Property @{
         PromptOn                  = $true
+        UptimeOn                  = $true
         TestDirRW                 = $true
         GitOn                     = $true
         GitFileStatus             = $true
@@ -66,6 +67,7 @@ function Set-PromptDefaults {
             $parts = $_.Split('=').Trim()
             switch ($parts[0]) {
                 "PromptOn"               { $global:psPromptSettings.PromptOn               = $parts[1] -match "true" }
+                "UptimeOn"               { $global:psPromptSettings.UptimeOn               = $parts[1] -match "true" }
                 "TestDirRW"              { $global:psPromptSettings.TestDirRW              = $parts[1] -match "true" }
                 "GitOn"                  { $global:psPromptSettings.GitOn                  = $parts[1] -match "true" }
                 "GitFileStatus"          { $global:psPromptSettings.GitFileStatus          = $parts[1] -match "true" }
@@ -164,37 +166,46 @@ function prompt {
     
         #Optional Info
         #[PS $($host.version.Major.ToString() + "." + $host.version.minor.ToString())]
+
+        [int]$tLength = 0
     
-        #Uptime
-        #Piece together the length of Uptime so we can right-justify the time
-        #Futz it a little, using length of the non-DateTime chars
-        $tLength = "up d 00h00m00s".Length + "ddd hh:mm?m ".Length + $tz.Length + 1
-        $tLength += ($s.frameSeparator[1].Length * 2)
-        $tLength += $s.frameOpener.Length + $s.frameCloser.Length
-        $tLength += $s.frameOpener.Length + $s.frameCloser.Length
-        $tLength += $uppity.days.ToString('###0').Length
-        Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
-        Write-Host "up " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-        Write-Host $uppity.days.ToString('###0') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-        Write-Host "d " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-        Write-Host $uppity.Hours.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-        Write-Host "h" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-        Write-Host $s.FrameSeparator[1] -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewline
-        Write-Host $uppity.Minutes.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-        Write-Host "m" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-        Write-Host $s.FrameSeparator[1] -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewline
-        Write-Host $uppity.Seconds.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-        Write-Host "s" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-        Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+        if ($s.UptimeOn) {
+            #Uptime
+            #Piece together the length of Uptime so we can right-justify the time
+            #Futz it a little, using length of the non-DateTime chars
+            $tLength = "up d 00h00m00s".Length + "ddd hh:mm?m ".Length + $tz.Length + 1
+            $tLength += ($s.frameSeparator[1].Length * 2)
+            $tLength += $s.frameOpener.Length + $s.frameCloser.Length
+            $tLength += $s.frameOpener.Length + $s.frameCloser.Length
+            $tLength += $uppity.days.ToString('###0').Length
+            Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+            Write-Host "up " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+            Write-Host $uppity.days.ToString('###0') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+            Write-Host "d " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+            Write-Host $uppity.Hours.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+            Write-Host "h" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+            Write-Host $s.FrameSeparator[1] -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewline
+            Write-Host $uppity.Minutes.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+            Write-Host "m" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+            Write-Host $s.FrameSeparator[1] -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewline
+            Write-Host $uppity.Seconds.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+            Write-Host "s" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+            Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+            Write-Host $spacer -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+            $tLength += $spacer.Length
+        }
+        else {
+            $tLength += $s.frameOpener.Length + $s.frameCloser.Length + "ddd hh:mm?m ".Length + $tz.Length + 1
+        }
+
 
         #GitStatus
         if (($s.GitOn) -and (Get-Module posh-git)) {
             $gitstat = get-gitstatus
             if ($gitstat) {
-                $tLength += $s.frameOpener.Length + $s.frameCloser.Length + $spacer.Length
+                $tLength += $s.frameOpener.Length + $s.frameCloser.Length 
                 $tLength += $gitstat.branch.length
 
-                Write-Host $spacer -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
                 Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
 
                 #Branch info
@@ -279,8 +290,8 @@ function prompt {
         Catch {
             $tPath = "Path Error"
         }
-        $DirectoryForeColor = $s.Info1ForeColor
-        $DirectoryBackColor = $s.Info1BackColor
+        $DirectoryForeColor = $s.Info2ForeColor
+        $DirectoryBackColor = $s.Info2BackColor
         if (($s.TestDirRW) -and (!(hid-TestWrite $tpath))) { 
                 $tpath += " RO" 
                 $DirectoryForeColor = $s.ErrorForeColor
@@ -295,7 +306,13 @@ function prompt {
         $tLength += $s.frameOpener.Length + $s.frameCloser.Length
 
         Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewLine
-        Write-Host "$tPath" -ForegroundColor $DirectoryForeColor -Back $DirectoryBackColor -NoNewLine
+        if ($tPath.Contains(":")) {
+            Write-Host "$($tPath.Split(":")[0]):" -ForegroundColor $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+            Write-Host $tPath.Split(":")[1] -ForegroundColor $DirectoryForeColor -Back $DirectoryBackColor -NoNewLine
+        }
+        else {
+            Write-Host "$tPath" -ForegroundColor $DirectoryForeColor -Back $DirectoryBackColor -NoNewLine
+        }
         Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewLine
     
         #Now let's use that futzed length to add some spaces before displaying the who@where
