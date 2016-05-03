@@ -15,6 +15,21 @@ Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | Foreach {
 }
 
 function Set-PromptDefaults {
+    <# 
+    .SYNOPSIS 
+        Reset prompt to default settings
+         
+    .DESCRIPTION 
+        While the prompt settings are somewhat simple, there are few (read: no) safeguards to keep from setting something wrong (or just ugly). This function resets the prompt to the defaults - either those in the script or those set via the .psprompt.ini file in the users profile directory.
+ 
+    .EXAMPLE 
+        PS C:\> Set-PromptDefaults
+
+    .LINK
+        https://github.com/brsh/psPrompt
+         
+    #> 
+
     $global:psPromptSettings = New-Object PSObject -Property @{
         PromptOn                  = $true
         UptimeOn                  = $true
@@ -62,8 +77,8 @@ function Set-PromptDefaults {
 
 
     #Read from personal settings file (if present)
-    if (test-path Profile:\.psprompt.ini) {
-        get-content Profile:\.psprompt.ini | ForEach-Object {
+    if (test-path $env:USERPROFILE\.psprompt.ini) {
+        get-content $env:USERPROFILE\.psprompt.ini | ForEach-Object {
             $parts = $_.Split('=').Trim()
             switch ($parts[0]) {
                 "PromptOn"               { $global:psPromptSettings.PromptOn               = $parts[1] -match "true" }
