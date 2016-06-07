@@ -215,44 +215,40 @@ function prompt {
 
 
         #GitStatus
-        if (($s.GitOn) -and (Get-Module posh-git)) {
-            $gitstat = get-gitstatus
-            if ($gitstat) {
+        if ($s.GitOn) { 
+            $branch = git rev-parse --abbrev-ref HEAD 2> $null
+            if ($branch) {
                 $tLength += $s.frameOpener.Length + $s.frameCloser.Length 
-                $tLength += $gitstat.branch.length
+                $tLength += $branch.length
 
                 Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
 
                 #Branch info
-                Write-Host (Get-Culture).TextInfo.ToTitleCase($gitstat.Branch) -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
+                Write-Host $branch -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
 
                 #File Counts
-                if($s.GitFileStatus -and $gitstat.HasWorking) {
-                    if($gitstat.Working.Added) {
+                if ($s.GitFileStatus) { 
+                    $gitstat = get-gitstatus
+                    if($gitstat.Added) {
                         $tLength += " +".Length + $gitstat.Working.Added.Count.ToString().Length
                         Write-Host " +" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-                        Write-Host $gitstat.Working.Added.Count -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+                        Write-Host $gitstat.Added -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
                     }
-                    if($gitstat.Working.Modified) {
+                    if($gitstat.Modified) {
                         $tLength += " ~".Length + $gitstat.Working.Modified.Count.ToString().Length
                         Write-Host " ~" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-                        Write-Host $gitstat.Working.Modified.Count -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+                        Write-Host $gitstat.Modified -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
                     }
-                    if($gitstat.Working.Deleted) {
+                    if($gitstat.Deleted) {
                         $tLength += " -".Length + $gitstat.Working.Deleted.Count.ToString().Length
                         Write-Host " -" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-                        Write-Host $gitstat.Working.Deleted.Count -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+                        Write-Host $gitstat.Deleted -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
                         }
-                    if ($gitstat.Working.Unmerged) {
+                    if ($gitstat.Unmerged) {
                         $tLength += " !".Length + $gitstat.Working.Unmerged.Count.ToString().Length
                         Write-Host " !" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-                        Write-Host $gitstat.Working.Unmerged.Count -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+                        Write-Host $gitstat.Unmerged -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
                     }
-                }
-
-                if ($status.HasUntracked) {
-                    $tLength += " !".Length
-                    Write-Host " !" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
                 }
 
                 Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
