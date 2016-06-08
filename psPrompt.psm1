@@ -251,7 +251,6 @@ function prompt {
                             Write-Host $gitstat.Unmerged -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
                         }
                     }
-
                     Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
                 }
             }
@@ -332,7 +331,7 @@ function prompt {
         Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewLine
     
         #Now let's use that futzed length to add some spaces before displaying the who@where
-        if($IsAdmin) { $tLength += " as ADMIN".Length }
+        if (hid-IsAdmin) { $tLength += " as ADMIN".Length }
         
         Try {
             $tIP = hid-ip
@@ -368,7 +367,7 @@ function prompt {
         Write-Host $s.FrameSeparator[0] -Fore "White" -NoNewLine
         Write-Host "$(($env:computername).ToLower())" -Fore $s.Info3ForeColor -Back $s.Info3BackColor -NoNewLine
     
-        if($IsAdmin) { Write-Host " as ADMIN" -Fore $s.ErrorForeColor -Back $s.ErrorBackColor -NoNewLine }
+        if(hid-IsAdmin) { Write-Host " as ADMIN" -Fore $s.ErrorForeColor -Back $s.ErrorBackColor -NoNewLine }
         Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor 
     
         if ($s.LineBottomOn) { Write-Host $line -ForegroundColor $ColorForeERR -BackgroundColor $ColorBackErr }

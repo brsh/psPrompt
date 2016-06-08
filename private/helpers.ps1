@@ -240,3 +240,17 @@ function hid-TestWrite {
         Remove-Item $testPath -ErrorAction SilentlyContinue -Force
     }
 }
+
+function hid-IsAdmin {
+    [bool]$IsAdmin = $false
+    if( ([System.Environment]::OSVersion.Version.Major -gt 5) -and ( # Vista and ...
+          new-object Security.Principal.WindowsPrincipal (
+             [Security.Principal.WindowsIdentity]::GetCurrent()) # current user is admin
+             ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) )
+    {
+      $IsAdmin = $True
+    } else {
+      $IsAdmin = $False
+    }
+    $IsAdmin
+}
