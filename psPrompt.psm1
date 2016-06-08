@@ -256,7 +256,7 @@ function prompt {
                 }
             }
             Catch { 
-                #Nothing to do here 
+                $global:psPromptSettings.GitOn = $false
             }
         }
 
