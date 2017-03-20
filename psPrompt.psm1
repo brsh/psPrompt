@@ -1,34 +1,34 @@
 ﻿##
-## Module Design leveragd from 
+## Module Design leveragd from
 ## http://www.the-little-things.net/blog/2015/10/03/powershell-thoughts-on-module-design/
 ##
 #region Private Variables
 # Current script path
 [string]$ScriptPath = Split-Path (get-variable myinvocation -scope script).value.Mycommand.Definition -Parent
 #endregion Private Variables
- 
+
 #region Methods
- 
+
 # Dot sourcing private script files
-Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | Foreach { 
+Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | Foreach {
     . $_.FullName
 }
 
 function Set-PromptDefaults {
-    <# 
-    .SYNOPSIS 
+    <#
+    .SYNOPSIS
         Reset prompt to default settings
-         
-    .DESCRIPTION 
+
+    .DESCRIPTION
         While the prompt settings are somewhat simple, there are few (read: no) safeguards to keep from setting something wrong (or just ugly). This function resets the prompt to the defaults - either those in the script or those set via the .psprompt.ini file in the users profile directory.
- 
-    .EXAMPLE 
+
+    .EXAMPLE
         PS C:\> Set-PromptDefaults
 
     .LINK
         https://github.com/brsh/psPrompt
-         
-    #> 
+
+    #>
 
     $global:psPromptSettings = New-Object PSObject -Property @{
         PromptOn                  = $true
@@ -38,30 +38,30 @@ function Set-PromptDefaults {
         GitFileStatus             = $true
 
         LineTopOn                 = $true
-        LineBottomOn              = $true    
+        LineBottomOn              = $true
         ExtraBlanksToStart        = 1
-    
+
         DefaultForeColor          = $Host.UI.RawUI.ForegroundColor
         DefaultBackColor          = $Host.UI.RawUI.BackgroundColor
-    
+
         ErrorForeColor            = [ConsoleColor]::Red
         ErrorBackColor            = $Host.UI.RawUI.BackgroundColor
-    
+
         AdminForeColor            = [ConsoleColor]::Red
         AdminBackColor            = $Host.UI.RawUI.BackgroundColor
-    
+
         HeadForeColor             = [ConsoleColor]::White
         HeadBackColor             = $Host.UI.RawUI.BackgroundColor
-    
+
         Info1ForeColor            = [ConsoleColor]::Green
         Info1BackColor            = $Host.UI.RawUI.BackgroundColor
-    
+
         Info2ForeColor            = [ConsoleColor]::Yellow
         Info2BackColor            = $Host.UI.RawUI.BackgroundColor
-    
+
         Info3ForeColor            = [ConsoleColor]::Magenta
         Info3BackColor            = $Host.UI.RawUI.BackgroundColor
-    
+
         frameOpener               = '['
         frameCloser               = ']'
         frameSeparator            = '@', ':', '>'
@@ -86,29 +86,29 @@ function Set-PromptDefaults {
                 "TestDirRW"              { $global:psPromptSettings.TestDirRW              = $parts[1] -match "true" }
                 "GitOn"                  { $global:psPromptSettings.GitOn                  = $parts[1] -match "true" }
                 "GitFileStatus"          { $global:psPromptSettings.GitFileStatus          = $parts[1] -match "true" }
-                
+
                 "LineTopOn"              { $global:psPromptSettings.LineTopOn              = $parts[1] -match "true"}
                 "LineBottomOn"           { $global:psPromptSettings.LineBottomOn           = $parts[1] -match "true" }
                 "ExtraBlanksToStart"     { $global:psPromptSettings.ExtraBlanksToStart     = $parts[1].TrimStart('"').TrimEnd('"') }
-                
+
                 "DefaultForeColor"       { $global:psPromptSettings.DefaultForeColor       = $parts[1].TrimStart('"').TrimEnd('"') }
                 "DefaultBackColor"       { $global:psPromptSettings.DefaultBackColor       = $parts[1].TrimStart('"').TrimEnd('"') }
-                
+
                 "ErrorForeColor"         { $global:psPromptSettings.ErrorForeColor         = $parts[1].TrimStart('"').TrimEnd('"') }
                 "ErrorBackColor"         { $global:psPromptSettings.ErrorBackColor         = $parts[1].TrimStart('"').TrimEnd('"') }
-                
+
                 "AdminForeColor"         { $global:psPromptSettings.AdminForeColor         = $parts[1].TrimStart('"').TrimEnd('"') }
                 "AdminBackColor"         { $global:psPromptSettings.AdminBackColor         = $parts[1].TrimStart('"').TrimEnd('"') }
-                
+
                 "HeadForeColor"          { $global:psPromptSettings.HeadForeColor          = $parts[1].TrimStart('"').TrimEnd('"') }
                 "HeadBackColor"          { $global:psPromptSettings.HeadBackColor          = $parts[1].TrimStart('"').TrimEnd('"') }
-                
+
                 "Info1ForeColor"         { $global:psPromptSettings.Info1ForeColor         = $parts[1].TrimStart('"').TrimEnd('"') }
                 "Info1BackColor"         { $global:psPromptSettings.Info1BackColor         = $parts[1].TrimStart('"').TrimEnd('"') }
-                
+
                 "Info2ForeColor"         { $global:psPromptSettings.Info2ForeColor         = $parts[1].TrimStart('"').TrimEnd('"') }
                 "Info2BackColor"         { $global:psPromptSettings.Info2BackColor         = $parts[1].TrimStart('"').TrimEnd('"') }
-                
+
                 "Info3ForeColor"         { $global:psPromptSettings.Info3ForeColor         = $parts[1].TrimStart('"').TrimEnd('"') }
                 "Info3BackColor"         { $global:psPromptSettings.Info3BackColor         = $parts[1].TrimStart('"').TrimEnd('"') }
 
@@ -118,10 +118,10 @@ function Set-PromptDefaults {
                                            if ($blah[0]) {
                                                $global:psPromptSettings.frameSeparator[0]  = $blah[0].TrimStart('"').TrimEnd('"')
                                            }
-                                           if ($blah[1]) { 
+                                           if ($blah[1]) {
                                               $global:psPromptSettings.frameSeparator[1]   = $blah[1].TrimStart('"').TrimEnd('"')
                                            }
-                                           if ($blah[2]) { 
+                                           if ($blah[2]) {
                                               $global:psPromptSettings.frameSeparator[2]   = $blah[2].TrimStart('"').TrimEnd('"')
                                            }
                  }
@@ -159,31 +159,31 @@ function prompt {
         [Environment]::CurrentDirectory = (Get-Location -PSProvider FileSystem).ProviderPath
         } Catch {}
         # Also, put the path in the title ... (don't restrict this to the FileSystem
-    
+
         $Host.UI.RawUI.WindowTitle = "{0} - {1} ({2})" -f $global:WindowTitlePrefix,$pwd.Path,$pwd.Provider.Name
         $ColorFG = $Host.UI.RawUI.ForegroundColor
         $ColorBG = $Host.UI.RawUI.BackgroundColor
-    
+
         $line = ($s.FrameLine * (($Host.UI.RawUI.WindowSize.Width)-1))
-    
+
         $uppity = (hid-uptime)
-    
+
         try {
             $batt = (hid-battery)
             $battstat = $batt[0].BatteryStatusChar
         }
         catch { }
-    
+
         $tz = hid-timezone
-    
+
         Write-Host ( "`n" * $s.BlanksToStart)
         if ($s.LineTopOn) { write-host $line -ForegroundColor $ColorForeERR -BackgroundColor $ColorBackErr }
-    
+
         #Optional Info
         #[PS $($host.version.Major.ToString() + "." + $host.version.minor.ToString())]
 
         [int]$tLength = 0
-    
+
         if ($s.UptimeOn) {
             #Uptime
             #Piece together the length of Uptime so we can right-justify the time
@@ -215,11 +215,11 @@ function prompt {
 
 
         #GitStatus
-        if ($s.GitOn) { 
+        if ($s.GitOn) {
             Try {
                 $branch = git rev-parse --abbrev-ref HEAD 2> $null
                 if ($branch) {
-                    $tLength += $s.frameOpener.Length + $s.frameCloser.Length 
+                    $tLength += $s.frameOpener.Length + $s.frameCloser.Length
                     $tLength += $branch.length
 
                     Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
@@ -228,7 +228,7 @@ function prompt {
                     Write-Host $branch -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
 
                     #File Counts
-                    if ($s.GitFileStatus) { 
+                    if ($s.GitFileStatus) {
                         $gitstat = get-gitstatus
                         if($gitstat.Added) {
                             $tLength += " +".Length + $gitstat.Working.Added.Count.ToString().Length
@@ -254,7 +254,7 @@ function prompt {
                     Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
                 }
             }
-            Catch { 
+            Catch {
                 $global:psPromptSettings.GitOn = $false
             }
         }
@@ -282,7 +282,7 @@ function prompt {
             Write-Host "h " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
             Write-Host $batt[0].RunTimeSpan.Minutes.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
             Write-Host "m" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-    
+
             Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
             Write-Host $spacer -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
         }
@@ -290,7 +290,7 @@ function prompt {
             #skip the battery and just write the blanks to right justify
             Write-Host ($spacer * (($Host.UI.RawUI.WindowSize.Width) - $tLength)) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
         }
-    
+
         #Day and Time
         Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
         Write-Host "$((get-date).ToString('ddd')) " -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
@@ -307,8 +307,8 @@ function prompt {
         }
         $DirectoryForeColor = $s.Info2ForeColor
         $DirectoryBackColor = $s.Info2BackColor
-        if (($s.TestDirRW) -and (!(hid-TestWrite $tpath))) { 
-                $tpath += " RO" 
+        if (($s.TestDirRW) -and (!(hid-TestWrite $tpath))) {
+                $tpath += " RO"
                 $DirectoryForeColor = $s.ErrorForeColor
                 $DirectoryBackColor = $s.ErrorBackColor
         }
@@ -329,10 +329,10 @@ function prompt {
             Write-Host "$tPath" -ForegroundColor $DirectoryForeColor -Back $DirectoryBackColor -NoNewLine
         }
         Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewLine
-    
+
         #Now let's use that futzed length to add some spaces before displaying the who@where
         if (hid-IsAdmin) { $tLength += " as ADMIN".Length }
-        
+
         Try {
             $tIP = hid-ip
         }
@@ -345,10 +345,10 @@ function prompt {
             $tLength += ($tIP.Length + $spacer.Length)
             $tLength += $s.frameOpener.Length + $s.frameCloser.Length
 
-    
+
             #Write the spaces...
             Write-Host ($spacer * (($Host.UI.RawUI.WindowSize.Width) - $tLength)) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
-    
+
             #IP Address
             Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewLine
             Write-Host "$tIP" -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
@@ -359,19 +359,23 @@ function prompt {
             #Skip the ip section and just write the spaces...
             Write-Host ($spacer * (($Host.UI.RawUI.WindowSize.Width) - $tLength)) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
         }
-    
-    
+
+
         #Username @ machine
         Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewLine
         Write-Host "$env:username" -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
         Write-Host $s.FrameSeparator[0] -Fore "White" -NoNewLine
         Write-Host "$(($env:computername).ToLower())" -Fore $s.Info3ForeColor -Back $s.Info3BackColor -NoNewLine
-    
+
         if(hid-IsAdmin) { Write-Host " as ADMIN" -Fore $s.ErrorForeColor -Back $s.ErrorBackColor -NoNewLine }
-        Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor 
-    
+        Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor
+
         if ($s.LineBottomOn) { Write-Host $line -ForegroundColor $ColorForeERR -BackgroundColor $ColorBackErr }
         Write-Host ($s.frameSeparator[2] * ($nestedPromptLevel + 1)) -NoNewLine -Fore $ColorFG -BackgroundColor $ColorBG
+        if (IsConEmu) {
+            write-host (ConEmuEndPrompt) -NoNewline
+            write-host (ConEmuTab) -NoNewline
+        }
         return " "
     }
     else {
@@ -387,7 +391,7 @@ Export-ModuleMember -function Set-PromptDefaults
 
 ###################################################
 ## END - Cleanup
- 
+
 #region Module Cleanup
 $ExecutionContext.SessionState.Module.OnRemove = {
     # cleanup when unloading module (if any)
