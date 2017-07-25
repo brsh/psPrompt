@@ -6,7 +6,17 @@ function hid-uptime {
 	return $retval
 }
 
-
+function hid-PSVer {
+	[string] $retval = ""
+	$retval = $PSVersionTable.PSVersion.Major.ToString()
+	$retval += "."
+	$retval += $PSVersionTable.PSVersion.Minor.ToString()
+	if ($PSVersionTable.PSVersion.Label) {
+		$retval += "-"
+		$retval += $PSVersionTable.PSVersion.Label.ToString()
+	}
+	$retval
+}
 
 Function hid-ip {
 	#Create/output network info object

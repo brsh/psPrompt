@@ -7,6 +7,7 @@ A PowerShell prompt module, which includes the following info in the prompt:
 * Date and time (incl. the current Time Zone)
 * Current directory (and if Read/Only)
 * Current IP Address (well, the first IPv4 on the first NIC)
+* PowerShell Version Number
 * User and machine names
 
 The prompt takes up the width of the screen, with right- and left-justified parts
@@ -17,7 +18,7 @@ Colors and decorations are now customizable. The module itself holds defaults, b
 
 ~~The idea for the customization mod came out of the GitHub prompt.~~
 
-**Correction:** The idea for customization came from the POSH-Git Module's prompt. I was confused since it looked like the GitHub client included the posh-git module (I only noticed it when an update did not include said module). Anyway, major kudos to dahlbyk and the Posh-Git module. I have removed the prompt's dependency on the module because it's WAY MORE than I need for this. But, I blatantly *cough* borrowed *cough* the regex code for the small bit I do need. 
+**Correction:** The idea for customization came from the POSH-Git Module's prompt. I was confused since it looked like the GitHub client included the posh-git module (I only noticed it when an update did not include said module). Anyway, major kudos to dahlbyk and the Posh-Git module. I have removed the prompt's dependency on the module because it's WAY MORE than I need for this. But, I blatantly *cough* borrowed *cough* the regex code for the small bit I do need.
 
 Please, check out Posh-Git if you use Git in PowerShell - https://github.com/dahlbyk/posh-git
 
