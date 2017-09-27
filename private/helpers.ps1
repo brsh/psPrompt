@@ -29,21 +29,13 @@ Function hid-ip {
 	Get-WmiObject @WMIhash | `
 		ForEach-Object {
 		$InfoHash = @{
-			Computername      = $_.DNSHostName
-			DefaultGateway    = $_.DefaultIPGateway
-			DHCPServer        = $_.DHCPServer
-			DHCPEnabled       = $_.DHCPEnabled
-			DHCPLeaseObtained = [System.Management.ManagementDateTimeConverter]::ToDateTime($_.DHCPLeaseObtained)
-			DHCPLeaseExpires  = [System.Management.ManagementDateTimeConverter]::ToDateTime($_.DHCPLeaseExpires)
-			DNSServer         = $_.DNSServerSearchOrder
-			DNSDomain         = $_.DNSDomain
-			IPAddress         = $_.IpAddress
-			MACAddress        = $_.MACAddress
-			NICDescription    = $_.Description
-			NICName           = $_.ServiceName
-			SubnetMask        = $_.IPSubnet
-			WINSPrimary       = $_.WINSPrimaryServer
-			WINSSecondary     = $_.WINSSecondaryServer
+			Computername   = $_.DNSHostName
+			DefaultGateway = $_.DefaultIPGateway
+			DHCPEnabled    = $_.DHCPEnabled
+			IPAddress      = $_.IpAddress
+			MACAddress     = $_.MACAddress
+			WINSPrimary    = $_.WINSPrimaryServer
+			WINSSecondary  = $_.WINSSecondaryServer
 		}
 		$InfoStack = New-Object PSObject -Property $InfoHash
 		#Add a (hopefully) unique object type name
@@ -123,7 +115,7 @@ function hid-battery {
 			RunTimeSpan              = $ts
 			Health                   = $_.Status
 		}
-		$InfoStack += New-Object -TypeName PSObject -Property $InfoHash
+		$InfoStack = New-Object -TypeName PSObject -Property $InfoHash
 
 		#Add a (hopefully) unique object type name
 		$InfoStack.PSTypeNames.Insert(0, "CPU.Information")
