@@ -4,6 +4,8 @@ A PowerShell prompt module, which includes the following info in the prompt:
 
 * Uptime
 * Git status (if applicable)
+* Battery status (for the first reported battery)
+* How long the last command took to execute
 * Date and time (incl. the current Time Zone)
 * Current directory (and if Read/Only)
 * Current IP Address (well, the first IPv4 on the first NIC)
@@ -14,7 +16,59 @@ The prompt takes up the width of the screen, with right- and left-justified part
 
 The module includes the main prompt function (which is mostly just write-host commands and formatting) in the psm1 file. The helper functions (those that pull wmi or other info) are in the "private" subfolder to keep them hidden from general use (and minimize collisions).
 
-Colors and decorations are now customizable. The module itself holds defaults, but by placing a .psprompt.ini file in your profile directory (c:\users\myname), you can modify any and all settings. An example .psprompt.ini file is included. Any item included in the file will over-ride the default. Any item NOT in the file will... not. A new function (set-promptdefaults) allows for a quick reset (since I don't currently do much... er... any error trapping).
+### Customizations
+
+The prompt is customizable. You can turn on/off sections, change the colors, change the separators, and the start/end markes ('[' and ']' by default).
+
+The settings are held in the PSPromptSettings variable.
+
+```
+DefaultBackColor     : DarkMagenta
+ExtraBlanksToStart   : 1
+frameForeColor       : White
+GitOn                : True
+frameLine            : ─
+LineBottomOn         : True
+LineTopOn            : True
+Info2BackColor       : DarkMagenta
+Info2ForeColor       : Yellow
+frameSpacer          :
+TestDirRW            : True
+ExecutionTimeOn      : True
+frameSpacerBackColor : DarkMagenta
+ErrorBackColor       : DarkMagenta
+frameSeparator       : {@, :, >}
+Info3ForeColor       : Magenta
+HeadForeColor        : White
+Info3BackColor       : DarkMagenta
+frameLineForeColor   : Yellow
+ErrorForeColor       : Red
+PromptOn             : True
+AdminForeColor       : Red
+GitFileStatus        : True
+frameLineBackColor   : DarkMagenta
+UptimeOn             : True
+Info1ForeColor       : Green
+frameOpener          : [
+frameSpacerForeColor : DarkYellow
+frameCloser          : ]
+PSVersionOn          : True
+AdminBackColor       : DarkMagenta
+DefaultForeColor     : DarkYellow
+BatteryOn            : True
+frameBackColor       : DarkMagenta
+Info1BackColor       : DarkMagenta
+HeadBackColor        : DarkMagenta
+```
+
+To change any, just use $PSPromptSettings.*setting* - so, to turn off Git: `$PSPromptSettings.GitOn = $false`
+
+The frameSeparator setting is an array of strings for:
+* 0 = the symbol between user@host ('@' by default)
+* 1 = the symbol separating Uptime numbers (':' by default)
+* 2 = the Prompt character ('>' by default)
+
+The module itself holds defaults, but by placing a .psprompt.ini file in your profile directory (c:\users\myname), you can modify any and all settings. An example .psprompt.ini file is included. Any item included in the file will over-ride the default. Any item NOT in the file will... not. Play around with the $PSPromptSettings variable BEFORE committing anything to the file. A new function (set-promptdefaults) allows for a quick reset (since I don't currently do much... er... any error trapping).
 
 ~~The idea for the customization mod came out of the GitHub prompt.~~
 

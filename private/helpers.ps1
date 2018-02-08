@@ -6,6 +6,28 @@ function hid-uptime {
 	return $retval
 }
 
+function hid-exetime {
+	$lastCommand = get-history | Select-Object -Last 1
+	$sb = [System.Text.StringBuilder]::new()
+	if ($lastCommand) {
+		try {
+			[timespan] $lastTime = $lastCommand.EndExecutionTime - $lastCommand.StartExecutionTime
+			if ($lastTime.Days) { [void] $sb.Append(($lastTime.Days).ToString('#0')); [void] $sb.Append(':') }
+			if ($lastTime.Hours) { [void] $sb.Append(($lastTime.Hours).ToString('00')); [void] $sb.Append(':') }
+			if ($lastTime.Minutes) { [void] $sb.Append(($lastTime.Minutes).ToString('00')); [void] $sb.Append(':') }
+			[void] $sb.Append(($lastTime.Seconds).ToString('00'))
+			[void] $sb.Append('.')
+			$sb.Append($lastTime.Milliseconds.ToString('00'))
+		} catch {
+			[void] $sb.clear()
+			[void] $sb.Append("err")
+		}
+	}
+	#write-host $sb.ToString() -ForegroundColor cyan -NoNewline
+	#write-host " xx" -ForegroundColor cyan
+	if ($sb.ToString().Length -gt 0) { $sb.ToString() }
+}
+
 function hid-PSVer {
 	[string] $retval = ""
 	$retval = $PSVersionTable.PSVersion.Major.ToString()

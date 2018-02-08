@@ -37,6 +37,8 @@ function Set-PromptDefaults {
 		GitOn                = $true
 		GitFileStatus        = $true
 		PSVersionOn          = $true
+		ExecutionTimeOn      = $true
+		BatteryOn            = $true
 
 		LineTopOn            = $true
 		LineBottomOn         = $true
@@ -88,6 +90,8 @@ function Set-PromptDefaults {
 				"GitOn" { $global:psPromptSettings.GitOn = $parts[1] -match "true" }
 				"GitFileStatus" { $global:psPromptSettings.GitFileStatus = $parts[1] -match "true" }
 				"PSVersionOn" { $global:psPromptSettings.PSVersionOn = $parts[1] -match "true" }
+				"ExecutionTimeOn" { $global:psPromptSettings.ExecutionTimeOn = $parts[1] -match "true" }
+				"BatteryOn" { $global:psPromptSettings.BatteryOn = $parts[1] -match "true" }
 
 				"LineTopOn" { $global:psPromptSettings.LineTopOn = $parts[1] -match "true"}
 				"LineBottomOn" { $global:psPromptSettings.LineBottomOn = $parts[1] -match "true" }
@@ -171,25 +175,47 @@ function prompt {
 
 		$uppity = (hid-uptime)
 
-		try {
-			$batt = (hid-battery)
-			$battstat = $batt[0].BatteryStatusChar
-		} catch { }
-
 		$tz = hid-timezone
+
+		if ($s.ExecutionTimeOn) {
+			#ExecutionTime of the last command
+			[string] $ExecTime = Hid-ExeTime
+			#Still trying to figure out why I get 2!!! responses, despite sending 1
+			try {
+				if ($ExecTime.IndexOf(' ') -gt 0) { $ExecTime = $ExecTime.Split(' ')[0] }
+				#Add the size of the ExecTime portion
+				if ($ExecTime.Length -gt 0) {
+					$ExeTimeLength = $ExecTime.Length
+					$ExeTimeLength += $s.frameSeparator[1].Length
+					$ExeTimeLength += $s.frameOpener.Length + $s.frameCloser.Length
+				}
+			} catch {}
+		}
 
 		Write-Host ( "`n" * $s.BlanksToStart)
 		if ($s.LineTopOn) { write-host $line -ForegroundColor $ColorForeERR -BackgroundColor $ColorBackErr }
 
 		[int]$tLength = 0
+		#Futzing the right-justification measurements
+		#Add the size of the Time portion
+		$tLength = "ddd hh:mm?m ".Length + $tz.Length + 1
+		$tLength += $s.frameSeparator[1].Length
+		$tLength += $s.frameOpener.Length + $s.frameCloser.Length
+		#Add the size of the Battery portion
+		$BattLength = "bat ##% ?? h 00m".Length + 1
+		$BattLength += $s.frameOpener.Length + $s.frameCloser.Length
+		$BattLength += 2 # $batt[0].RunTimeSpan.Hours.ToString().Length (this gets adjusted later)
+		$tLength += $BattLength
+		#Bring in the ExecutionTime Length (if any)
+		$tLength += $ExeTimeLength
+
 
 		if ($s.UptimeOn) {
 			#Uptime
 			#Piece together the length of Uptime so we can right-justify the time
 			#Futz it a little, using length of the non-DateTime chars
-			$tLength = "up d 00h00m00s".Length + "ddd hh:mm?m ".Length + $tz.Length + 1
-			$tLength += ($s.frameSeparator[1].Length * 2)
-			$tLength += $s.frameOpener.Length + $s.frameCloser.Length
+			$tLength += "up d 00h00m00s".Length
+			$tLength += $s.frameSeparator[1].Length
 			$tLength += $s.frameOpener.Length + $s.frameCloser.Length
 			$tLength += $uppity.days.ToString('###0').Length
 			Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
@@ -268,34 +294,52 @@ function prompt {
 			}
 		}
 
+		#Right Justify based on our earlier futzing
+		Write-Host ($spacer * (($Host.UI.RawUI.WindowSize.Width) - $tLength)) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
 
 		#Battery
-		If (($batt -ne $null) -and ($batt.EstimatedChargeRemaining -ne 100)) {
-			#Battery Length
-			$tLength += "bat ##% ?? h 00m".Length + 1
-			$tLength += $s.frameOpener.Length + $s.frameCloser.Length
-			$tLength += $batt[0].RunTimeSpan.Hours.ToString().Length
-			#Write the blanks to right justify
-			Write-Host ($spacer * (($Host.UI.RawUI.WindowSize.Width) - $tLength)) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
-			Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
-			Write-Host "bat " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-			if (($batt.EstimatedChargeRemaining) -gt 30) {
-				Write-Host "$($batt[0].EstimatedChargeRemaining.ToString('00'))" -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-			} else {
-				Write-Host "$($batt[0].EstimatedChargeRemaining.ToString('00'))" -Fore $s.ErrorForeColor -Back $s.ErrorBackColor -NoNewLine
-			}
-			Write-Host "% " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-			Write-Host "$battstat " -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
-			Write-Host $batt[0].RunTimeSpan.Hours -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
-			Write-Host "h " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-			Write-Host $batt[0].RunTimeSpan.Minutes.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
-			Write-Host "m" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+		if ($s.BatteryOn) {
+			try {
+				$batt = (hid-battery)
+				$battstat = $batt[0].BatteryStatusChar
+			} catch { }
+			If (($batt -ne $null) -and ($batt.EstimatedChargeRemaining -lt 97)) {
+				#Battery Length - adjust for a 1 digit hour (only allows for 2 digit in the base)
+				if ($batt[0].RunTimeSpan.Hours.ToString().Length -eq 1) { Write-Host " " -NoNewline }
+				Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+				Write-Host "bat " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+				if (($batt.EstimatedChargeRemaining) -gt 30) {
+					Write-Host "$($batt[0].EstimatedChargeRemaining.ToString('00'))" -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+				} else {
+					Write-Host "$($batt[0].EstimatedChargeRemaining.ToString('00'))" -Fore $s.ErrorForeColor -Back $s.ErrorBackColor -NoNewLine
+				}
+				Write-Host "% " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+				Write-Host "$battstat " -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+				Write-Host $batt[0].RunTimeSpan.Hours -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
+				Write-Host "h " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+				Write-Host $batt[0].RunTimeSpan.Minutes.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
+				Write-Host "m" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
 
-			Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
-			Write-Host $spacer -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+				Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+				Write-Host $spacer -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+			} else {
+				Write-Host ($spacer * $BattLength) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+			}
 		} else {
-			#skip the battery and just write the blanks to right justify
-			Write-Host ($spacer * (($Host.UI.RawUI.WindowSize.Width) - $tLength)) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+			Write-Host ($spacer * $BattLength) -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+		}
+
+		if ($s.ExecutionTimeOn) {
+			#ExecutionTime of the last command
+			#write-host $ExecTime -ForegroundColor red
+			if ($ExecTime.Length -gt 0) {
+				$tLength += $s.frameOpener.Length + $ExecTime.Length + $s.frameCloser.Length
+				Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+				Write-Host $ExecTime -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
+				Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+				Write-Host $spacer -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+				$tLength += $spacer.Length
+			}
 		}
 
 		#Day and Time
