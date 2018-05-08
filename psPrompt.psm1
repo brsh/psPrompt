@@ -181,15 +181,17 @@ function prompt {
 			#ExecutionTime of the last command
 			[string] $ExecTime = Hid-ExeTime
 			#Still trying to figure out why I get 2!!! responses, despite sending 1
-			try {
-				if ($ExecTime.IndexOf(' ') -gt 0) { $ExecTime = $ExecTime.Split(' ')[0] }
-				#Add the size of the ExecTime portion
-				if ($ExecTime.Length -gt 0) {
-					$ExeTimeLength = $ExecTime.Length
-					$ExeTimeLength += $s.frameSeparator[1].Length
-					$ExeTimeLength += $s.frameOpener.Length + $s.frameCloser.Length
-				}
-			} catch {}
+			if ($ExecTime) {
+				try {
+					if ($ExecTime.IndexOf(' ') -gt 0) { $ExecTime = $ExecTime.Split(' ')[0] }
+					#Add the size of the ExecTime portion
+					if ($ExecTime.Length -gt 0) {
+						$ExeTimeLength = $ExecTime.Length
+						$ExeTimeLength += $s.frameSeparator[1].Length
+						$ExeTimeLength += $s.frameOpener.Length + $s.frameCloser.Length
+					}
+				} catch {}
+			}
 		}
 
 		Write-Host ( "`n" * $s.BlanksToStart)
@@ -252,45 +254,47 @@ function prompt {
 
 		#GitStatus
 		if ($s.GitOn) {
-			Try {
-				$branch = git rev-parse --abbrev-ref HEAD 2> $null
-				if ($branch) {
-					$tLength += $s.frameOpener.Length + $s.frameCloser.Length
-					$tLength += $branch.length
+			if (Test-IfGitinPath) {
+				Try {
+					$branch = git rev-parse --abbrev-ref HEAD 2> $null
+					if ($branch) {
+						$tLength += $s.frameOpener.Length + $s.frameCloser.Length
+						$tLength += $branch.length
 
-					Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+						Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
 
-					#Branch info
-					Write-Host $branch -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
+						#Branch info
+						Write-Host $branch -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
 
-					#File Counts
-					if ($s.GitFileStatus) {
-						$gitstat = get-gitstatus
-						if ($gitstat.Added) {
-							$tLength += " +".Length + $gitstat.Working.Added.Count.ToString().Length
-							Write-Host " +" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-							Write-Host $gitstat.Added -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+						#File Counts
+						if ($s.GitFileStatus) {
+							$gitstat = get-gitstatus
+							if ($gitstat.Added) {
+								$tLength += " +".Length + $gitstat.Working.Added.Count.ToString().Length
+								Write-Host " +" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+								Write-Host $gitstat.Added -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+							}
+							if ($gitstat.Modified) {
+								$tLength += " ~".Length + $gitstat.Working.Modified.Count.ToString().Length
+								Write-Host " ~" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+								Write-Host $gitstat.Modified -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+							}
+							if ($gitstat.Deleted) {
+								$tLength += " -".Length + $gitstat.Working.Deleted.Count.ToString().Length
+								Write-Host " -" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+								Write-Host $gitstat.Deleted -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+							}
+							if ($gitstat.Unmerged) {
+								$tLength += " !".Length + $gitstat.Working.Unmerged.Count.ToString().Length
+								Write-Host " !" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+								Write-Host $gitstat.Unmerged -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+							}
 						}
-						if ($gitstat.Modified) {
-							$tLength += " ~".Length + $gitstat.Working.Modified.Count.ToString().Length
-							Write-Host " ~" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-							Write-Host $gitstat.Modified -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
-						}
-						if ($gitstat.Deleted) {
-							$tLength += " -".Length + $gitstat.Working.Deleted.Count.ToString().Length
-							Write-Host " -" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-							Write-Host $gitstat.Deleted -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
-						}
-						if ($gitstat.Unmerged) {
-							$tLength += " !".Length + $gitstat.Working.Unmerged.Count.ToString().Length
-							Write-Host " !" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-							Write-Host $gitstat.Unmerged -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
-						}
+						Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
 					}
-					Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+				} Catch {
+					$global:psPromptSettings.GitOn = $false
 				}
-			} Catch {
-				$global:psPromptSettings.GitOn = $false
 			}
 		}
 
