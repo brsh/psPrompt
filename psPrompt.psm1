@@ -10,8 +10,22 @@
 #region Methods
 
 # Dot sourcing private script files
-Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | Foreach {
+Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | ForEach-Object {
 	. $_.FullName
+}
+
+Function Set-WindowTitle {
+	param (
+		[string] $Text = "PowerShell"
+	)
+	$script:WindowTitlePrefix = $text
+	if (hid-IsAdmin) {
+		$script:WindowTitlePrefix += ' (Admin)'
+	}
+}
+
+if (!$script:WindowTitlePrefix) {
+	Set-WindowTitle
 }
 
 function Set-PromptDefaults {
@@ -77,7 +91,6 @@ function Set-PromptDefaults {
 		frameSpacerForeColor = $Host.UI.RawUI.ForegroundColor
 		frameSpacerBackColor = $Host.UI.RawUI.BackgroundColor
 	}
-
 
 	#Read from personal settings file (if present)
 	if (test-path $env:USERPROFILE\.psprompt.ini) {
@@ -145,7 +158,6 @@ function Set-PromptDefaults {
 	} #end if
 } #end function
 
-
 function prompt {
 	$WeAreInError = $?
 	$s = $global:psPromptSettings
@@ -166,8 +178,11 @@ function prompt {
 			[Environment]::CurrentDirectory = (Get-Location -PSProvider FileSystem).ProviderPath
 		} Catch {}
 		# Also, put the path in the title ... (don't restrict this to the FileSystem
-
-		$Host.UI.RawUI.WindowTitle = "{0} - {1} ({2})" -f $global:WindowTitlePrefix, $pwd.Path, $pwd.Provider.Name
+		if ($script:WindowTitlePrefix) {
+			$Host.UI.RawUI.WindowTitle = "{0} - {1} ({2})" -f $script:WindowTitlePrefix, $pwd.Path, $pwd.Provider.Name
+		} else {
+			$Host.UI.RawUI.WindowTitle = "{0} ({1})" -f $pwd.Path, $pwd.Provider.Name
+		}
 		$ColorFG = $Host.UI.RawUI.ForegroundColor
 		$ColorBG = $Host.UI.RawUI.BackgroundColor
 
@@ -425,7 +440,7 @@ function prompt {
 		Write-Host ($s.frameSeparator[2] * ($nestedPromptLevel + 1)) -NoNewLine -Fore $ColorFG -BackgroundColor $ColorBG
 		if (IsConEmu) {
 			write-host (ConEmuEndPrompt) -NoNewline
-			write-host (ConEmuTab) -NoNewline
+			#write-host (ConEmuTab) -NoNewline
 		}
 		return " "
 	} else {
@@ -435,8 +450,9 @@ function prompt {
 
 Set-PromptDefaults
 
-Export-ModuleMember -function prompt
-Export-ModuleMember -function Set-PromptDefaults
+Export-ModuleMember -Function prompt
+Export-ModuleMember -Function Set-PromptDefaults
+Export-ModuleMember -Function Set-WindowTitle
 
 
 ###################################################
@@ -445,7 +461,7 @@ Export-ModuleMember -function Set-PromptDefaults
 #region Module Cleanup
 $ExecutionContext.SessionState.Module.OnRemove = {
 	# cleanup when unloading module (if any)
-	dir alias: | Where-Object { $_.Source -match "psPrompt" } | Remove-Item
-	dir function: | Where-Object { $_.Source -match "psPrompt" } | Remove-Item
+	Get-ChildItem alias: | Where-Object { $_.Source -match "psPrompt" } | Remove-Item
+	Get-ChildItem function: | Where-Object { $_.Source -match "psPrompt" } | Remove-Item
 }
 #endregion Module Cleanup

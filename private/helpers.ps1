@@ -152,7 +152,6 @@ function hid-battery {
 	}
 }
 
-
 Function hid-TimeZone {
 	<#
     .SYNOPSIS
@@ -208,3 +207,4 @@ function hid-IsAdmin {
 	}
 	$IsAdmin
 }
+
