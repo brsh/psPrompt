@@ -15,6 +15,27 @@ Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | ForEach-Objec
 }
 
 Function Set-WindowTitle {
+    <#
+    .SYNOPSIS
+    Set the title of the current shell window
+
+    .DESCRIPTION
+    A simple function to mimic the cmd 'title' command. The psPrompt module adjusts the 
+    shell window to include the 'title' and the current working directory. This function
+    allows changing the title and still maintain the current working dir in alongside.
+
+    Note: if the alias doesn't already exist, it will alias this function as 'title'
+
+    .EXAMPLE
+    Set-WindowTitle -Text "This is my new title"
+
+    Set the shell window title to "This is my new title - $PWD" (where $pwd is the current dir)
+
+    .EXAMPLE
+    title -Text 'Testing Worker Module'
+
+    Set the shell window title to "Testing Worker Module - $PWD"
+    #>
 	param (
 		[string] $Text = "PowerShell"
 	)
@@ -22,6 +43,10 @@ Function Set-WindowTitle {
 	if (hid-IsAdmin) {
 		$script:WindowTitlePrefix += ' (Admin)'
 	}
+}
+
+if (-not (Get-Command -Name title -ErrorAction Ignore)) {
+    Set-Alias -Name title -Value Set-WindowTitle -Description 'Set the title of the current shell window' -Force
 }
 
 if (!$script:WindowTitlePrefix) {
@@ -453,6 +478,9 @@ Set-PromptDefaults
 Export-ModuleMember -Function prompt
 Export-ModuleMember -Function Set-PromptDefaults
 Export-ModuleMember -Function Set-WindowTitle
+if (Get-Alias -Name 'title' -ErrorAction Ignore) {
+    Export-ModuleMember -Alias title
+}
 
 
 ###################################################
