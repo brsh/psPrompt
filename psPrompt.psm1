@@ -15,12 +15,12 @@ Get-ChildItem $ScriptPath/private -Recurse -Filter "*.ps1" -File | ForEach-Objec
 }
 
 Function Set-WindowTitle {
-    <#
+	<#
     .SYNOPSIS
     Set the title of the current shell window
 
     .DESCRIPTION
-    A simple function to mimic the cmd 'title' command. The psPrompt module adjusts the 
+    A simple function to mimic the cmd 'title' command. The psPrompt module adjusts the
     shell window to include the 'title' and the current working directory. This function
     allows changing the title and still maintain the current working dir in alongside.
 
@@ -39,14 +39,14 @@ Function Set-WindowTitle {
 	param (
 		[string] $Text = "PowerShell"
 	)
-	$script:WindowTitlePrefix = $text
+	$script:WindowTitlePrefix = $text -replace '[^\p{L}\p{Nd})({},.?:;!@#$%^&*_\-=+~<>/\\]', ' '
 	if (hid-IsAdmin) {
 		$script:WindowTitlePrefix += ' (Admin)'
 	}
 }
 
 if (-not (Get-Command -Name title -ErrorAction Ignore)) {
-    Set-Alias -Name title -Value Set-WindowTitle -Description 'Set the title of the current shell window' -Force
+	Set-Alias -Name title -Value Set-WindowTitle -Description 'Set the title of the current shell window' -Force
 }
 
 if (!$script:WindowTitlePrefix) {
@@ -72,6 +72,7 @@ function Set-PromptDefaults {
 	$global:psPromptSettings = New-Object PSObject -Property @{
 		PromptOn             = $true
 		UptimeOn             = $true
+		TitleOn              = $true
 		TestDirRW            = $true
 		GitOn                = $true
 		GitFileStatus        = $true
@@ -124,6 +125,7 @@ function Set-PromptDefaults {
 			switch ($parts[0]) {
 				"PromptOn" { $global:psPromptSettings.PromptOn = $parts[1] -match "true" }
 				"UptimeOn" { $global:psPromptSettings.UptimeOn = $parts[1] -match "true" }
+				"TitleOn" { $global:psPromptSettings.TitleOn = $parts[1] -match "true" }
 				"TestDirRW" { $global:psPromptSettings.TestDirRW = $parts[1] -match "true" }
 				"GitOn" { $global:psPromptSettings.GitOn = $parts[1] -match "true" }
 				"GitFileStatus" { $global:psPromptSettings.GitFileStatus = $parts[1] -match "true" }
@@ -251,22 +253,45 @@ function prompt {
 		#Bring in the ExecutionTime Length (if any)
 		$tLength += $ExeTimeLength
 
+		if ($s.TitleOn) {
+			[string] $titleTemp = $script:WindowTitlePrefix.Replace(' (Admin)', '').Trim()
+			if ($titleTemp -ne 'Powershell') {
+				$tLength += $titleTemp.Length - 1
+				$tLength += $s.frameSeparator[1].Length
+				$tLength += $s.frameOpener.Length + $s.frameCloser.Length
+				Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+				if (hid-IsAdmin) {
+					Write-Host $titleTemp -Fore $s.AdminForeColor -Back $s.AdminBackColor -NoNewLine
+				} else {
+					Write-Host $titleTemp -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+				}
+				Write-Host $s.FrameCloser -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
+				Write-Host $spacer -Fore $s.frameSpacerForeColor -Back $s.frameSpacerBackColor -NoNewLine
+				$tLength += $spacer.Length
+			}
+		}
 
 		if ($s.UptimeOn) {
 			#Uptime
 			#Piece together the length of Uptime so we can right-justify the time
 			#Futz it a little, using length of the non-DateTime chars
-			$tLength += "up d 00h00m00s".Length
+			$tLength += "up 00m00s".Length - 1
 			$tLength += $s.frameSeparator[1].Length
 			$tLength += $s.frameOpener.Length + $s.frameCloser.Length
-			$tLength += $uppity.days.ToString('###0').Length
 			Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
 			Write-Host "up " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-			Write-Host $uppity.days.ToString('###0') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-			Write-Host "d " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-			Write-Host $uppity.Hours.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-			Write-Host "h" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-			Write-Host $s.FrameSeparator[1] -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewline
+			if ($uppity.days -gt 0) {
+				Write-Host $uppity.days.ToString('###0') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+				Write-Host "d " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+				$tLength += 2
+				$tLength += $uppity.days.ToString('###0').Length
+			}
+			if ($uppity.Hours -gt 0) {
+				Write-Host $uppity.Hours.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
+				Write-Host "h" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+				Write-Host $s.FrameSeparator[1] -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewline
+				$tLength += 4
+			}
 			Write-Host $uppity.Minutes.ToString('00') -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
 			Write-Host "m" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
 			Write-Host $s.FrameSeparator[1] -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewline
@@ -479,7 +504,7 @@ Export-ModuleMember -Function prompt
 Export-ModuleMember -Function Set-PromptDefaults
 Export-ModuleMember -Function Set-WindowTitle
 if (Get-Alias -Name 'title' -ErrorAction Ignore) {
-    Export-ModuleMember -Alias title
+	Export-ModuleMember -Alias title
 }
 
 
