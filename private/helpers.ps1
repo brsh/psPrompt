@@ -107,7 +107,7 @@ function hid-battery {
 		[Parameter(Position = 0)]
 		[string] $hostname = "localhost"
 	)
-	Get-WmiObject -Class win32_Battery -ComputerName $hostname | `
+	Get-CimInstance -Class win32_Battery | `
 		ForEach-Object {
 		switch ($_.BatteryStatus) {
 			1 { $textstat = "Discharging"; $charstat = "--"; break }
