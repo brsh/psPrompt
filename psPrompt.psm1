@@ -1,5 +1,5 @@
 ﻿##
-## Module Design leveragd from
+## Module Design leveraged from
 ## http://www.the-little-things.net/blog/2015/10/03/powershell-thoughts-on-module-design/
 ##
 #region Private Variables
@@ -69,7 +69,7 @@ function Set-PromptDefaults {
 
     #>
 
-	$global:psPromptSettings = New-Object PSObject -Property @{
+	$hashset = [ordered] @{
 		PromptOn             = $true
 		UptimeOn             = $true
 		TitleOn              = $true
@@ -117,6 +117,7 @@ function Set-PromptDefaults {
 		frameSpacerForeColor = $Host.UI.RawUI.ForegroundColor
 		frameSpacerBackColor = $Host.UI.RawUI.BackgroundColor
 	}
+	$global:psPromptSettings = New-Object PSObject -Property $hashset
 
 	#Read from personal settings file (if present)
 	if (test-path $env:USERPROFILE\.psprompt.ini) {
@@ -246,7 +247,7 @@ function prompt {
 		$tLength += $s.frameSeparator[1].Length
 		$tLength += $s.frameOpener.Length + $s.frameCloser.Length
 		#Add the size of the Battery portion
-		$BattLength = "bat ##% ?? h 00m".Length + 1
+		$BattLength = "_##%_ ?? h 00m".Length + 1
 		$BattLength += $s.frameOpener.Length + $s.frameCloser.Length
 		$BattLength += 2 # $batt[0].RunTimeSpan.Hours.ToString().Length (this gets adjusted later)
 		$tLength += $BattLength
@@ -376,13 +377,39 @@ function prompt {
 				#Battery Length - adjust for a 1 digit hour (only allows for 2 digit in the base)
 				if ($batt[0].RunTimeSpan.Hours.ToString().Length -eq 1) { Write-Host " " -NoNewline }
 				Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
-				Write-Host "bat " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
-				if (($batt.EstimatedChargeRemaining) -gt 30) {
-					Write-Host "$($batt[0].EstimatedChargeRemaining.ToString('00'))" -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewLine
-				} else {
-					Write-Host "$($batt[0].EstimatedChargeRemaining.ToString('00'))" -Fore $s.ErrorForeColor -Back $s.ErrorBackColor -NoNewLine
+				
+				[int] $Spaces = 5
+				$BatteryLevel = $batt[0].EstimatedChargeRemaining
+				if ($BatteryLevel -gt 100) { $BatteryLevel = 100 }
+				[string] $battext = $BatteryLevel.ToString('00')
+				if ($battext.Length -lt 3) { $battext = "${battext}%" }
+
+				[System.ConsoleColor] $BackColorSolid, [System.ConsoleColor] $BackColorDim = Switch ($BatteryLevel) {
+					{$_ -gt 49 } { "Green", "DarkGreen"; break }
+					{$_ -gt 29 } { "Yellow", "DarkGray"; break }
+					DEFAULT { "Red", "DarkRed"; break }
 				}
-				Write-Host "% " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
+
+				$BatteryLevel /= (100 / $Spaces)
+				$BatteryLevel = [math]::round($batterylevel, 0)
+
+				for ($i = 0; $i -le $Spaces; $i++) {
+					if ($i -lt ($BatteryLevel)) {
+						$BackColor = $BackColorSolid; $foreColor = $BackColorDim
+					} else {
+						$BackColor = $BackColorDim; $foreColor = $BackColorSolid
+					}
+					switch ($i) {
+						0 { Write-Host ' ' -BackgroundColor $BackColorSolid -NoNewline; break }
+						1 { Write-Host $battext[0] -BackgroundColor $BackColor -ForegroundColor $foreColor -NoNewline; break }
+						2 { Write-Host $battext[1] -BackgroundColor $BackColor -ForegroundColor $foreColor -NoNewline; break }
+						3 { Write-Host $battext[2] -BackgroundColor $BackColor -ForegroundColor $foreColor -NoNewline; break }
+						4 { Write-Host ' ' -BackgroundColor $BackColor -NoNewline; break }
+					}
+				}
+
+				Write-Host " " -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
+				
 				Write-Host "$battstat " -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
 				Write-Host $batt[0].RunTimeSpan.Hours -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
 				Write-Host "h " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
