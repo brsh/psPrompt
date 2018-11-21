@@ -208,3 +208,12 @@ function hid-IsAdmin {
 	$IsAdmin
 }
 
+function hid-LastPWD {
+	#Check if we've changed directories
+	#and make note of it if we have
+	if ($null -eq $Global:PWDLast) { $Global:PWDLast = $pwd}
+	if ($pwd -ne $Global:PWDCurr) {
+		$Global:PWDLast = $Global:PWDCurr
+		$Global:PWDCurr = $pwd
+	}
+}

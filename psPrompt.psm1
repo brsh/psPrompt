@@ -186,9 +186,40 @@ function Set-PromptDefaults {
 	} #end if
 } #end function
 
+function Switch-Directory {
+	if ($null -ne $Global:PWDLast) {
+		if ($Global:PWDLast.Path -ne $pwd.Path) {
+			Write-Host " Leaving: " -ForegroundColor Green -NoNewline
+			Write-Host " $($pwd.Path)" -ForegroundColor White
+			if ($pwd.Path -ne $pwd.ProviderPath) {
+				Write-Host "     aka:  $($pwd.ProviderPath)" -ForegroundColor White
+			}
+			Write-Host "Entering: " -ForegroundColor Green -NoNewline
+			Write-Host " $($PWDLast.Path)" -ForegroundColor White
+			if ($PWDLast.Path -ne $PWDLast.ProviderPath) {
+				Write-Host "     aka:  $($PWDLast.ProviderPath)" -ForegroundColor White
+			}
+			try {
+				Set-Location $Global:PWDLast
+			} catch {
+				Write-Host "Well that didn't work" -ForegroundColor Red
+				Write-Host $_.Exception.Message
+			}
+		} else {
+			Write-Host "Where ever you go, there you are" -ForegroundColor Green
+		}
+	} else {
+		Write-Host "Literally nowhere to go" -ForegroundColor Green
+	}
+}
+
+New-Alias -Name 'pop' -Value 'Switch-Directory' -Description 'Switch between the current and last directories'
+
 function prompt {
 	$WeAreInError = $?
 	$s = $global:psPromptSettings
+	#Remember the current PWD
+	hid-LastPWD
 	$spacer = $s.FrameSpacer.ToString().Substring(0, 1)
 	if ($s.PromptOn) {
 		if ($WeAreInError) {
@@ -377,7 +408,7 @@ function prompt {
 				#Battery Length - adjust for a 1 digit hour (only allows for 2 digit in the base)
 				if ($batt[0].RunTimeSpan.Hours.ToString().Length -eq 1) { Write-Host " " -NoNewline }
 				Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
-				
+
 				[int] $Spaces = 5
 				$BatteryLevel = $batt[0].EstimatedChargeRemaining
 				if ($BatteryLevel -gt 100) { $BatteryLevel = 100 }
@@ -409,7 +440,7 @@ function prompt {
 				}
 
 				Write-Host " " -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
-				
+
 				Write-Host "$battstat " -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
 				Write-Host $batt[0].RunTimeSpan.Hours -Fore $s.Info1ForeColor -Back $s.Info1BackColor -NoNewline
 				Write-Host "h " -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
@@ -530,8 +561,12 @@ Set-PromptDefaults
 Export-ModuleMember -Function prompt
 Export-ModuleMember -Function Set-PromptDefaults
 Export-ModuleMember -Function Set-WindowTitle
+Export-ModuleMember -Function Switch-Directory
 if (Get-Alias -Name 'title' -ErrorAction Ignore) {
 	Export-ModuleMember -Alias title
+}
+if (Get-Alias -Name 'pop' -ErrorAction Ignore) {
+	Export-ModuleMember -Alias pop
 }
 
 
