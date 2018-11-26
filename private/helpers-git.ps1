@@ -53,7 +53,7 @@ function Get-GITStatus {
 	}
 
 	$retval = New-Object PSObject -Property @{
-		Branch   = (Get-Culture).TextInfo.ToTitleCase($branch)
+		Branch   = $branch
 		AheadBy  = $aheadBy
 		BehindBy = $behindBy
 		Upstream = $upstream
@@ -74,7 +74,7 @@ function Test-IfGitinPath {
 		$GitFound = $false
 	} else {
 		[bool] $done = $false
-		$curr = Get-Item $PathInfo
+		$curr = Get-Item $PathInfo -Force
 		Do {
 			$done = $false
 			$testing = Test-Path (join-path $curr.FullName '.git')

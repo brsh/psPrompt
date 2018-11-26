@@ -4,7 +4,7 @@ A PowerShell prompt module, which includes the following info in the prompt:
 
 * Uptime
 * Git status (if applicable)
-* Battery status (for the first reported battery)
+* Battery status (for the first reported battery) - includes "graphic"!
 * How long the last command took to execute
 * Date and time (incl. the current Time Zone)
 * Current directory (and if Read/Only)
@@ -18,47 +18,49 @@ The module includes the main prompt function (which is mostly just write-host co
 
 ### Customizations
 
-The prompt is customizable. You can turn on/off sections, change the colors, change the separators, and the start/end markes ('[' and ']' by default).
+The prompt is customizable. You can turn on/off sections, change the colors, change the separators, and the start/end markers ('[' and ']' by default).
 
 The settings are held in the PSPromptSettings variable.
 
 ```
-DefaultBackColor     : DarkMagenta
-ExtraBlanksToStart   : 1
-frameForeColor       : White
-GitOn                : True
-frameLine            : ─
-LineBottomOn         : True
-LineTopOn            : True
-Info2BackColor       : DarkMagenta
-Info2ForeColor       : Yellow
-frameSpacer          :
-TestDirRW            : True
-ExecutionTimeOn      : True
-frameSpacerBackColor : DarkMagenta
-ErrorBackColor       : DarkMagenta
-frameSeparator       : {@, :, >}
-Info3ForeColor       : Magenta
-HeadForeColor        : White
-Info3BackColor       : DarkMagenta
-frameLineForeColor   : Yellow
-ErrorForeColor       : Red
 PromptOn             : True
-AdminForeColor       : Red
-GitFileStatus        : True
-frameLineBackColor   : DarkMagenta
 UptimeOn             : True
-Info1ForeColor       : Green
-frameOpener          : [
-frameSpacerForeColor : DarkYellow
-frameCloser          : ]
+TitleOn              : True
+TestDirRW            : True
+GitOn                : True
+GitFileStatus        : True
 PSVersionOn          : True
-AdminBackColor       : DarkMagenta
-DefaultForeColor     : DarkYellow
+ExecutionTimeOn      : True
 BatteryOn            : True
-frameBackColor       : DarkMagenta
-Info1BackColor       : DarkMagenta
+BatteryThreshold     : 90
+LineTopOn            : True
+LineBottomOn         : True
+ExtraBlanksToStart   : 1
+DefaultForeColor     : DarkYellow
+DefaultBackColor     : DarkMagenta
+ErrorForeColor       : Red
+ErrorBackColor       : DarkMagenta
+AdminForeColor       : Red
+AdminBackColor       : DarkMagenta
+HeadForeColor        : White
 HeadBackColor        : DarkMagenta
+Info1ForeColor       : Green
+Info1BackColor       : DarkMagenta
+Info2ForeColor       : Yellow
+Info2BackColor       : DarkMagenta
+Info3ForeColor       : Magenta
+Info3BackColor       : DarkMagenta
+frameOpener          : [
+frameCloser          : ]
+frameSeparator       : {@, :, >}
+frameLine            : ─
+frameForeColor       : White
+frameBackColor       : DarkMagenta
+frameLineForeColor   : Yellow
+frameLineBackColor   : DarkMagenta
+frameSpacer          :
+frameSpacerForeColor : DarkYellow
+frameSpacerBackColor : DarkMagenta
 ```
 
 To change any, just use $PSPromptSettings.*setting* - so, to turn off Git: `$PSPromptSettings.GitOn = $false`
@@ -68,7 +70,13 @@ The frameSeparator setting is an array of strings for:
 * 1 = the symbol separating Uptime numbers (':' by default)
 * 2 = the Prompt character ('>' by default)
 
+The BatteryThreshold setting controls when the 'graphic' battery appears ... my work laptop is permanently maxed at 96%, so I set the battery to appear when it gets below 90.
+
 The module itself holds defaults, but by placing a .psprompt.ini file in your profile directory (c:\users\myname), you can modify any and all settings. An example .psprompt.ini file is included. Any item included in the file will over-ride the default. Any item NOT in the file will... not. Play around with the $PSPromptSettings variable BEFORE committing anything to the file. A new function (set-promptdefaults) allows for a quick reset (since I don't currently do much... er... any error trapping).
+
+And now!! psprompt settings can be directory specific. Maybe you like different line displays for prod code vs dev code (what, sometimes I separate my code - it happens). Maybe you want git status on for some repos and not for others. Now you can. Just put a .psprompt.ini file in the directory and those settings will override the current defaults. Consequently, the settings will reload with each prompt display - no more need to reload defaults manually to test settings.
+
+Also consequently, I don't know what all I've broken with this (like, it just occurred to me that you can no longer use in-memory temp settings :( )... so I will probably revisit this soon. Then again, I rarely set temp settings ... so we'll see.
 
 ~~The idea for the customization mod came out of the GitHub prompt.~~
 

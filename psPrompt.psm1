@@ -79,6 +79,7 @@ function Set-PromptDefaults {
 		PSVersionOn          = $true
 		ExecutionTimeOn      = $true
 		BatteryOn            = $true
+		BatteryThreshold     = 90
 
 		LineTopOn            = $true
 		LineBottomOn         = $true
@@ -119,72 +120,87 @@ function Set-PromptDefaults {
 	}
 	$global:psPromptSettings = New-Object PSObject -Property $hashset
 
-	#Read from personal settings file (if present)
+	#Read from global personal settings file (if present)
 	if (test-path $env:USERPROFILE\.psprompt.ini) {
-		get-content $env:USERPROFILE\.psprompt.ini | ForEach-Object {
-			$parts = $_.Split('=').Trim()
-			switch ($parts[0]) {
-				"PromptOn" { $global:psPromptSettings.PromptOn = $parts[1] -match "true" }
-				"UptimeOn" { $global:psPromptSettings.UptimeOn = $parts[1] -match "true" }
-				"TitleOn" { $global:psPromptSettings.TitleOn = $parts[1] -match "true" }
-				"TestDirRW" { $global:psPromptSettings.TestDirRW = $parts[1] -match "true" }
-				"GitOn" { $global:psPromptSettings.GitOn = $parts[1] -match "true" }
-				"GitFileStatus" { $global:psPromptSettings.GitFileStatus = $parts[1] -match "true" }
-				"PSVersionOn" { $global:psPromptSettings.PSVersionOn = $parts[1] -match "true" }
-				"ExecutionTimeOn" { $global:psPromptSettings.ExecutionTimeOn = $parts[1] -match "true" }
-				"BatteryOn" { $global:psPromptSettings.BatteryOn = $parts[1] -match "true" }
-
-				"LineTopOn" { $global:psPromptSettings.LineTopOn = $parts[1] -match "true"}
-				"LineBottomOn" { $global:psPromptSettings.LineBottomOn = $parts[1] -match "true" }
-				"ExtraBlanksToStart" { $global:psPromptSettings.ExtraBlanksToStart = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"DefaultForeColor" { $global:psPromptSettings.DefaultForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"DefaultBackColor" { $global:psPromptSettings.DefaultBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"ErrorForeColor" { $global:psPromptSettings.ErrorForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"ErrorBackColor" { $global:psPromptSettings.ErrorBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"AdminForeColor" { $global:psPromptSettings.AdminForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"AdminBackColor" { $global:psPromptSettings.AdminBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"HeadForeColor" { $global:psPromptSettings.HeadForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"HeadBackColor" { $global:psPromptSettings.HeadBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"Info1ForeColor" { $global:psPromptSettings.Info1ForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"Info1BackColor" { $global:psPromptSettings.Info1BackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"Info2ForeColor" { $global:psPromptSettings.Info2ForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"Info2BackColor" { $global:psPromptSettings.Info2BackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"Info3ForeColor" { $global:psPromptSettings.Info3ForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"Info3BackColor" { $global:psPromptSettings.Info3BackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-
-				"frameOpener" { $global:psPromptSettings.frameOpener = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameCloser" { $global:psPromptSettings.frameCloser = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameSeparator" {
-					$blah = $parts[1].Split(',').Trim()
-					if ($blah[0]) {
-						$global:psPromptSettings.frameSeparator[0] = $blah[0].TrimStart('"').TrimEnd('"')
-					}
-					if ($blah[1]) {
-						$global:psPromptSettings.frameSeparator[1] = $blah[1].TrimStart('"').TrimEnd('"')
-					}
-					if ($blah[2]) {
-						$global:psPromptSettings.frameSeparator[2] = $blah[2].TrimStart('"').TrimEnd('"')
-					}
-				}
-				"frameLine" { $global:psPromptSettings.frameLine = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameForeColor" { $global:psPromptSettings.frameForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameBackColor" { $global:psPromptSettings.frameBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameLineForeColor" { $global:psPromptSettings.frameLineForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameLineBackColor" { $global:psPromptSettings.frameLineBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameSpacer" { $global:psPromptSettings.frameSpacer = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameSpacerForeColor" { $global:psPromptSettings.frameSpacerForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
-				"frameSpacerBackColor" { $global:psPromptSettings.frameSpacerBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
-			} #end switch
-		} #end foreach
+		Import-PromptINI -promptini ([string[]] (get-content $env:USERPROFILE\.psprompt.ini))
+	} #end if
+	#Read from local personal settings file (if present)
+	if (test-path "$($pwd.ProviderPath)\.psprompt.ini") {
+		Import-PromptINI -promptini ([string[]] (get-content "$($pwd.ProviderPath)\.psprompt.ini"))
 	} #end if
 } #end function
+
+function Import-PromptINI {
+	[cmdletbinding()]
+	param (
+		[Parameter(ValueFromPipeline = $true)]
+		[string[]] $promptini
+	)
+
+	$promptini | ForEach-Object {
+		$parts = $_.Split('=').Trim()
+		switch ($parts[0]) {
+			"PromptOn" { $global:psPromptSettings.PromptOn = $parts[1] -match "true" }
+			"UptimeOn" { $global:psPromptSettings.UptimeOn = $parts[1] -match "true" }
+			"TitleOn" { $global:psPromptSettings.TitleOn = $parts[1] -match "true" }
+			"TestDirRW" { $global:psPromptSettings.TestDirRW = $parts[1] -match "true" }
+			"GitOn" { $global:psPromptSettings.GitOn = $parts[1] -match "true" }
+			"GitFileStatus" { $global:psPromptSettings.GitFileStatus = $parts[1] -match "true" }
+			"PSVersionOn" { $global:psPromptSettings.PSVersionOn = $parts[1] -match "true" }
+			"ExecutionTimeOn" { $global:psPromptSettings.ExecutionTimeOn = $parts[1] -match "true" }
+			"BatteryOn" { $global:psPromptSettings.BatteryOn = $parts[1] -match "true" }
+			"BatteryThreshold" { $global:psPromptSettings.BatteryThreshold = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"LineTopOn" { $global:psPromptSettings.LineTopOn = $parts[1] -match "true"}
+			"LineBottomOn" { $global:psPromptSettings.LineBottomOn = $parts[1] -match "true" }
+			"ExtraBlanksToStart" { $global:psPromptSettings.ExtraBlanksToStart = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"DefaultForeColor" { $global:psPromptSettings.DefaultForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"DefaultBackColor" { $global:psPromptSettings.DefaultBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"ErrorForeColor" { $global:psPromptSettings.ErrorForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"ErrorBackColor" { $global:psPromptSettings.ErrorBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"AdminForeColor" { $global:psPromptSettings.AdminForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"AdminBackColor" { $global:psPromptSettings.AdminBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"HeadForeColor" { $global:psPromptSettings.HeadForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"HeadBackColor" { $global:psPromptSettings.HeadBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"Info1ForeColor" { $global:psPromptSettings.Info1ForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"Info1BackColor" { $global:psPromptSettings.Info1BackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"Info2ForeColor" { $global:psPromptSettings.Info2ForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"Info2BackColor" { $global:psPromptSettings.Info2BackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"Info3ForeColor" { $global:psPromptSettings.Info3ForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"Info3BackColor" { $global:psPromptSettings.Info3BackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+
+			"frameOpener" { $global:psPromptSettings.frameOpener = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameCloser" { $global:psPromptSettings.frameCloser = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameSeparator" {
+				$blah = $parts[1].Split(',').Trim()
+				if ($blah[0]) {
+					$global:psPromptSettings.frameSeparator[0] = $blah[0].TrimStart('"').TrimEnd('"')
+				}
+				if ($blah[1]) {
+					$global:psPromptSettings.frameSeparator[1] = $blah[1].TrimStart('"').TrimEnd('"')
+				}
+				if ($blah[2]) {
+					$global:psPromptSettings.frameSeparator[2] = $blah[2].TrimStart('"').TrimEnd('"')
+				}
+			}
+			"frameLine" { $global:psPromptSettings.frameLine = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameForeColor" { $global:psPromptSettings.frameForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameBackColor" { $global:psPromptSettings.frameBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameLineForeColor" { $global:psPromptSettings.frameLineForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameLineBackColor" { $global:psPromptSettings.frameLineBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameSpacer" { $global:psPromptSettings.frameSpacer = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameSpacerForeColor" { $global:psPromptSettings.frameSpacerForeColor = $parts[1].TrimStart('"').TrimEnd('"') }
+			"frameSpacerBackColor" { $global:psPromptSettings.frameSpacerBackColor = $parts[1].TrimStart('"').TrimEnd('"') }
+		} #end switch
+	} #end foreach
+}
 
 function Switch-Directory {
 	if ($null -ne $Global:PWDLast) {
@@ -217,6 +233,7 @@ New-Alias -Name 'pop' -Value 'Switch-Directory' -Description 'Switch between the
 
 function prompt {
 	$WeAreInError = $?
+	Set-PromptDefaults
 	$s = $global:psPromptSettings
 	#Remember the current PWD
 	hid-LastPWD
@@ -353,7 +370,13 @@ function prompt {
 		if ($s.GitOn) {
 			if (Test-IfGitinPath) {
 				Try {
-					$branch = git rev-parse --abbrev-ref HEAD 2> $null
+					#$branch = git rev-parse --abbrev-ref HEAD 2> $null
+					$gitstat = get-gitstatus
+					if ($gitstat.Branch) {
+					$branch = $gitstat.Branch
+					} else {
+						$branch = git rev-parse --abbrev-ref HEAD 2> $null
+					}
 					if ($branch) {
 						$tLength += $s.frameOpener.Length + $s.frameCloser.Length
 						$tLength += $branch.length
@@ -365,24 +388,24 @@ function prompt {
 
 						#File Counts
 						if ($s.GitFileStatus) {
-							$gitstat = get-gitstatus
+							#$gitstat = get-gitstatus
 							if ($gitstat.Added) {
-								$tLength += " +".Length + $gitstat.Working.Added.Count.ToString().Length
+								$tLength += " +".Length + $gitstat.Added.ToString().Length
 								Write-Host " +" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
 								Write-Host $gitstat.Added -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
 							}
 							if ($gitstat.Modified) {
-								$tLength += " ~".Length + $gitstat.Working.Modified.Count.ToString().Length
+								$tLength += " ~".Length + $gitstat.Modified.ToString().Length
 								Write-Host " ~" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
 								Write-Host $gitstat.Modified -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
 							}
 							if ($gitstat.Deleted) {
-								$tLength += " -".Length + $gitstat.Working.Deleted.Count.ToString().Length
+								$tLength += " -".Length + $gitstat.Deleted.ToString().Length
 								Write-Host " -" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
 								Write-Host $gitstat.Deleted -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
 							}
 							if ($gitstat.Unmerged) {
-								$tLength += " !".Length + $gitstat.Working.Unmerged.Count.ToString().Length
+								$tLength += " !".Length + $gitstat.Unmerged.ToString().Length
 								Write-Host " !" -Fore $s.HeadForeColor -Back $s.HeadBackColor -NoNewLine
 								Write-Host $gitstat.Unmerged -Fore $s.Info2ForeColor -Back $s.Info2BackColor -NoNewLine
 							}
@@ -404,7 +427,7 @@ function prompt {
 				$batt = (hid-battery)
 				$battstat = $batt[0].BatteryStatusChar
 			} catch { }
-			If (($batt -ne $null) -and ($batt.EstimatedChargeRemaining -lt 97)) {
+			If (($null -ne $batt) -and ($batt.EstimatedChargeRemaining -lt $s.BatteryThreshold)) {
 				#Battery Length - adjust for a 1 digit hour (only allows for 2 digit in the base)
 				if ($batt[0].RunTimeSpan.Hours.ToString().Length -eq 1) { Write-Host " " -NoNewline }
 				Write-Host $s.FrameOpener -Fore $s.FrameForeColor -back $s.FrameBackColor -NoNewline
