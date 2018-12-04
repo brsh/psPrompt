@@ -48,21 +48,24 @@ Function hid-ip {
 		Filter      = "IPEnabled='$True'"
 		ErrorAction = "Stop"
 	}
-	Get-WmiObject @WMIhash | `
+
+	Get-CimInstance @WMIhash |
 		ForEach-Object {
-		$InfoHash = @{
-			Computername   = $_.DNSHostName
-			DefaultGateway = $_.DefaultIPGateway
-			DHCPEnabled    = $_.DHCPEnabled
-			IPAddress      = $_.IpAddress
-			MACAddress     = $_.MACAddress
-			WINSPrimary    = $_.WINSPrimaryServer
-			WINSSecondary  = $_.WINSSecondaryServer
+		if ($_.DefaultIPGateway) {
+			$InfoHash = @{
+				Computername   = $_.DNSHostName
+				DefaultGateway = $_.DefaultIPGateway
+				DHCPEnabled    = $_.DHCPEnabled
+				IPAddress      = $_.IpAddress
+				MACAddress     = $_.MACAddress
+				WINSPrimary    = $_.WINSPrimaryServer
+				WINSSecondary  = $_.WINSSecondaryServer
+			}
+			$InfoStack = New-Object PSObject -Property $InfoHash
+			#Add a (hopefully) unique object type name
+			$InfoStack.PSTypeNames.Insert(0, "IP.Information")
+			$InfoStack
 		}
-		$InfoStack = New-Object PSObject -Property $InfoHash
-		#Add a (hopefully) unique object type name
-		$InfoStack.PSTypeNames.Insert(0, "IP.Information")
-		$InfoStack
 	}
 }
 
