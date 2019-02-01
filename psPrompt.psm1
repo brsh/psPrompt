@@ -37,7 +37,7 @@ Function Set-WindowTitle {
     Set the shell window title to "Testing Worker Module - $PWD"
     #>
 	param (
-		[string] $Text = "PowerShell"
+		[string] $Text = $(if ($PSVersionTable.PSEdition -match 'Core') { "pwsh" } else { "PowerShell" })
 	)
 	$script:WindowTitlePrefix = $text -replace '[^\p{L}\p{Nd})({},.?:;!@#$%^&*_\-=+~<>/\\]', ' '
 	if (hid-IsAdmin) {
@@ -373,7 +373,7 @@ function prompt {
 					#$branch = git rev-parse --abbrev-ref HEAD 2> $null
 					$gitstat = get-gitstatus
 					if ($gitstat.Branch) {
-					$branch = $gitstat.Branch
+						$branch = $gitstat.Branch
 					} else {
 						$branch = git rev-parse --abbrev-ref HEAD 2> $null
 					}
