@@ -74,9 +74,11 @@ The BatteryThreshold setting controls when the 'graphic' battery appears ... my 
 
 The module itself holds defaults, but by placing a .psprompt.ini file in your profile directory (c:\users\myname), you can modify any and all settings. An example .psprompt.ini file is included. Any item included in the file will over-ride the default. Any item NOT in the file will... not. Play around with the $PSPromptSettings variable BEFORE committing anything to the file. The function, Set-PromptDefaults, allows for a quick reset (since I don't currently do much... er... any error trapping).
 
-And now!! psPrompt settings can be directory-tree specific. Maybe you like different line displays for prod code vs dev code (what, sometimes I separate my code - it happens). Maybe you want git status on for some repos and not for others. Now you can. Just put a .psprompt.ini file in the directory and those settings will override the current defaults. Plus, they work down-stream. So, put a .psprompt.ini in a parent, and those settings will be set for all subdirectories (unless/until a more "local" .psprompt.ini file is found). Multiple .psprompt.ini files are _not_ cumulative, however. Yet.
+And now!! psPrompt settings can be directory-tree specific. Maybe you like different line displays for prod code vs dev code (what, sometimes I separate my code - it happens). Maybe you want git status on for some repos and not for others. Now you can. Just put a .psprompt.ini file in the directory and those settings will override the current defaults. Plus, they work down-stream. So, put a .psprompt.ini in a parent, and those settings will be set for all subdirectories (unless/until a more "local" .psprompt.ini file is found). Multiple .psprompt.ini files are _not_ cumulative, however. Yet. 
 
 These per-directory settings no longer break the in-memory temp settings (and yay for that). Simple fix, really.
+
+But, they do stick if the next folder does not have a .psprompt.ini anywhere in the tree. I need to build a better framework, overall, for the settings :( I'm working on a revamp of the prompt; I need to fix a few things (including structure). So, that's a chore for the revamp.
 
 ~~The idea for the customization mod came out of the GitHub prompt.~~
 
