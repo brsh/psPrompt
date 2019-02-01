@@ -72,11 +72,11 @@ The frameSeparator setting is an array of strings for:
 
 The BatteryThreshold setting controls when the 'graphic' battery appears ... my work laptop is permanently maxed at 96%, so I set the battery to appear when it gets below 90.
 
-The module itself holds defaults, but by placing a .psprompt.ini file in your profile directory (c:\users\myname), you can modify any and all settings. An example .psprompt.ini file is included. Any item included in the file will over-ride the default. Any item NOT in the file will... not. Play around with the $PSPromptSettings variable BEFORE committing anything to the file. A new function (set-promptdefaults) allows for a quick reset (since I don't currently do much... er... any error trapping).
+The module itself holds defaults, but by placing a .psprompt.ini file in your profile directory (c:\users\myname), you can modify any and all settings. An example .psprompt.ini file is included. Any item included in the file will over-ride the default. Any item NOT in the file will... not. Play around with the $PSPromptSettings variable BEFORE committing anything to the file. The function, Set-PromptDefaults, allows for a quick reset (since I don't currently do much... er... any error trapping).
 
-And now!! psprompt settings can be directory specific. Maybe you like different line displays for prod code vs dev code (what, sometimes I separate my code - it happens). Maybe you want git status on for some repos and not for others. Now you can. Just put a .psprompt.ini file in the directory and those settings will override the current defaults. Consequently, the settings will reload with each prompt display - no more need to reload defaults manually to test settings.
+And now!! psPrompt settings can be directory-tree specific. Maybe you like different line displays for prod code vs dev code (what, sometimes I separate my code - it happens). Maybe you want git status on for some repos and not for others. Now you can. Just put a .psprompt.ini file in the directory and those settings will override the current defaults. Plus, they work down-stream. So, put a .psprompt.ini in a parent, and those settings will be set for all subdirectories (unless/until a more "local" .psprompt.ini file is found). Multiple .psprompt.ini files are _not_ cumulative, however. Yet.
 
-Also consequently, I don't know what all I've broken with this (like, it just occurred to me that you can no longer use in-memory temp settings :( )... so I will probably revisit this soon. Then again, I rarely set temp settings ... so we'll see.
+These per-directory settings no longer break the in-memory temp settings (and yay for that). Simple fix, really.
 
 ~~The idea for the customization mod came out of the GitHub prompt.~~
 

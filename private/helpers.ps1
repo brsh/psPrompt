@@ -1,5 +1,39 @@
 ﻿## Helper Functions for psSysInfo Module
 
+
+function Find-InUpStreamFolder {
+	param (
+		[string] $filename
+	)
+	$pathInfo = Microsoft.PowerShell.Management\Get-Location
+	[string] $FileFound = ''
+
+	if ((-not $pathInfo) -or ($pathInfo.Provider.Name -ne 'FileSystem')) {
+		$FileFound = ''
+	} else {
+		[bool] $done = $false
+		$curr = Get-Item $PathInfo
+		Do {
+			$done = $false
+			try {
+				$TestFor = join-path $curr.FullName "$filename"
+				$testing = Test-Path ($TestFor)
+				if ($testing) {
+					$FileFound = "$TestFor"
+					$Done = $true
+				} else {
+					$curr = $curr.Parent
+				}
+				if (-not $curr) { $FileFound = ''; $done = $true }
+			} catch {
+				$FileFound = ''; $done = $true
+			}
+		} until ($done)
+	}
+	$FileFound
+}
+
+
 function hid-uptime {
 	$wmi = Get-CIMInstance Win32_OperatingSystem
 	$retval = (get-date) - ($wmi)[0].LastBootUpTime

@@ -119,16 +119,19 @@ function Set-PromptDefaults {
 		frameSpacerBackColor = $Host.UI.RawUI.BackgroundColor
 	}
 	$global:psPromptSettings = New-Object PSObject -Property $hashset
-
 	#Read from global personal settings file (if present)
 	if (test-path $env:USERPROFILE\.psprompt.ini) {
 		Import-PromptINI -promptini ([string[]] (get-content $env:USERPROFILE\.psprompt.ini))
 	} #end if
-	#Read from local personal settings file (if present)
-	if (test-path "$($pwd.ProviderPath)\.psprompt.ini") {
-		Import-PromptINI -promptini ([string[]] (get-content "$($pwd.ProviderPath)\.psprompt.ini"))
-	} #end if
+	Get-SavedDefaults
 } #end function
+
+Function Get-SavedDefaults {
+	$SavedFile = Find-InUpstreamFolder -Filename ".psprompt.ini"
+	if ($SavedFile) {
+		Import-PromptINI -promptini ([string[]] (get-content "$SavedFile"))
+	}
+}
 
 function Import-PromptINI {
 	[cmdletbinding()]
@@ -231,9 +234,12 @@ function Switch-Directory {
 
 New-Alias -Name 'pop' -Value 'Switch-Directory' -Description 'Switch between the current and last directories'
 
+Set-PromptDefaults
+
 function prompt {
 	$WeAreInError = $?
-	Set-PromptDefaults
+	#Set-PromptDefaults
+	Get-SavedDefaults
 	$s = $global:psPromptSettings
 	#Remember the current PWD
 	hid-LastPWD
@@ -579,7 +585,7 @@ function prompt {
 	}
 }
 
-Set-PromptDefaults
+#Set-PromptDefaults
 
 Export-ModuleMember -Function prompt
 Export-ModuleMember -Function Set-PromptDefaults
