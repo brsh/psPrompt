@@ -84,7 +84,7 @@ Function hid-ip {
 	}
 
 	Get-CimInstance @WMIhash |
-		ForEach-Object {
+	ForEach-Object {
 		if ($_.DefaultIPGateway) {
 			$InfoHash = @{
 				Computername   = $_.DNSHostName
@@ -144,7 +144,7 @@ function hid-battery {
 		[Parameter(Position = 0)]
 		[string] $hostname = "localhost"
 	)
-	Get-CimInstance -Class win32_Battery | `
+	Get-CimInstance -Class win32_Battery | Where-Object { $_.BatteryStatus } | `
 		ForEach-Object {
 		switch ($_.BatteryStatus) {
 			1 { $textstat = "Discharging"; $charstat = "--"; break }
@@ -248,7 +248,7 @@ function hid-IsAdmin {
 function hid-LastPWD {
 	#Check if we've changed directories
 	#and make note of it if we have
-	if ($null -eq $Global:PWDLast) { $Global:PWDLast = $pwd}
+	if ($null -eq $Global:PWDLast) { $Global:PWDLast = $pwd }
 	if ($pwd -ne $Global:PWDCurr) {
 		$Global:PWDLast = $Global:PWDCurr
 		$Global:PWDCurr = $pwd
